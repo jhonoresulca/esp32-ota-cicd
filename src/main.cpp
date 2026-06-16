@@ -9,7 +9,7 @@
 #define FIRMWARE_URL "https://github.com/jhonoresulca/esp32-ota-cicd/releases/latest/download/firmware.bin"
 
 // Versión actual del firmware — cambiar en cada release
-String VERSION_LOCAL = "1.0.4";
+String VERSION_LOCAL = "1.0.5";
 
 unsigned long lastCheck = 0;
 
@@ -126,7 +126,7 @@ void loop() {
     // Parpadeo LED para confirmar que el firmware está corriendo
     digitalWrite(2, HIGH);
     Serial.println("LED ON");
-    delay(1000);
+    delay(100);
 
     digitalWrite(2, LOW);
     Serial.println("LED OFF");
