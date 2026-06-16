@@ -1,0 +1,80 @@
+# .github/workflows/release.yml
+# CI/CD completo para OTA GitHub
+#
+# FLUJO:
+# git push a main
+#   -> compila firmware
+#   -> lee version del codigo
+#   -> crea GitHub Release con el .bin
+#   -> actualiza version.txt
+#   -> los ESP32 detectan la nueva version y se actualizan solos
+#
+# REQUISITO: en tu main.cpp define la version asi:
+#   String VERSION_LOCAL = "1.0.2";
+#
+# COMO USARLO:
+#   1. Cambia VERSION_LOCAL en main.cpp a la version nueva
+#   2. git add . && git commit -m "v1.0.2" && git push
+#   3. GitHub hace todo lo demas automaticamente
+
+name: Build y Release OTA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descarga el codigo
+      - name: Checkout codigo
+        uses: actions/checkout@v3
+
+      # 2. Instala Python y PlatformIO
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar PlatformIO
+        run: pip install platformio
+
+      # 3. Compila el firmware
+      - name: Compilar firmware
+        run: pio run -e esp32s3
+
+      # 4. Lee la version desde main.cpp
+      # Busca la linea:  String VERSION_LOCAL = "1.0.2";
+      - name: Leer version
+        id: version
+        run: |
+          VERSION=$(grep 'VERSION_LOCAL' src/main.cpp \
+                    | grep -oP '"\K[^"]+' | head -1)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version encontrada: $VERSION"
+
+      # 5. Actualiza version.txt en el repo
+      - name: Actualizar version.txt
+        run: |
+          echo "${{ steps.version.outputs.VERSION }}" > version.txt
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add version.txt
+          git commit -m "ci: version.txt -> ${{ steps.version.outputs.VERSION }}"
+          git push
+
+      # 6. Crea el GitHub Release y sube el firmware.bin
+      - name: Crear Release y subir firmware.bin
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: "Firmware v${{ steps.version.outputs.VERSION }}"
+          body: |
+            Release automatico generado por CI/CD
+            Version: ${{ steps.version.outputs.VERSION }}
+          files: .pio/build/esp32s3/firmware.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
