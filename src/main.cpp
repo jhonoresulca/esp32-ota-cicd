@@ -2,7 +2,7 @@
 #include <ArduinoOTA.h>
 
 // VERSION — cambia este numero para cada release
-String VERSION_LOCAL = "1.0.0";
+String VERSION_LOCAL = "1.0.1";
 
 const char* ssid     = "NAVITRACK -2.4G";
 const char* password = "N@V1TR4CK";
