@@ -22,7 +22,7 @@ void setup() {
     Serial.println("OTA listo");
     /************************************************** */
 
-    pinMode(LED,OUTPUT):
+    pinMode(LED,OUTPUT);
 }
 
 void loop() {
